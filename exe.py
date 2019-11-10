@@ -1,5 +1,9 @@
 import ray
 import numpy as np
+import dni
+import importlib
+importlib.reload(dni)
+
 def execute(clusterid ,
             AccessMethod,
             ActivationExt, Neuron, Models,
