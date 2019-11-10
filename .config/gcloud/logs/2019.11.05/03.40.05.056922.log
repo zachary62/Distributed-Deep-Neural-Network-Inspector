@@ -1,0 +1,7 @@
+2019-11-05 03:40:05,058 DEBUG    root            Loaded Command Group: [u'gcloud', u'auth']
+2019-11-05 03:40:05,060 DEBUG    root            Loaded Command Group: [u'gcloud', u'auth', u'configure_docker']
+2019-11-05 03:40:05,062 DEBUG    root            Running [gcloud.auth.configure-docker] with arguments: [--quiet: "True"]
+2019-11-05 03:40:05,124 INFO     ___FILE_ONLY___ Docker configuration file updated.
+
+2019-11-05 03:40:05,126 INFO     root            Display format: "default"
+2019-11-05 03:40:05,130 DEBUG    root            SDK update checks are disabled.

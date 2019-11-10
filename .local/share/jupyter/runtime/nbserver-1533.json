@@ -1,0 +1,11 @@
+{
+  "base_url": "/",
+  "hostname": "0.0.0.0",
+  "notebook_dir": "/home/zh2408",
+  "password": false,
+  "pid": 1533,
+  "port": 5000,
+  "secure": false,
+  "token": "6ecc7be178dd48e05d9a98b6020e58aa359a6fbd27044861",
+  "url": "http://0.0.0.0:5000/"
+}
