@@ -16,8 +16,8 @@ importlib.reload(tool)
 def inspect(clusterid ,
             AccessMethod,
             ActivationExt, Neuron, Models,
-            FeaturesFunctions , FeatureNames, FeatureExtractor,
-            MetricExtractor, MetricName):
+            FeaturesFunctions , FeatureNames, MetricName, FeatureExtractor = [None],
+            MetricExtractor = [None]):
     
     optimize()
     
