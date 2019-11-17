@@ -1,73 +1,67 @@
-import tool
+import dni
+import importlib
+importlib.reload(dni)
+import ray
 
-class AbcExtractor():
+class AbsFeatureExtractor():
     def __init__(self):
+        pass
+    def get_next(self):
+        pass
+    def have_next(self):
         pass
     def extract(self):
         pass
-    def get_class(self):
-        return "AbcExtractor"
-    def get_name(self):
-        return self.name
     
-# input is one record, feature function takes one record, return one feature
-class Feature_Extractor(AbcExtractor):
-    def __init__(self,feature,name =""):
-        self.feature = feature
-        self.name = name 
-    def extract(self,input):
-        return self.feature(input)
-    def get_class(self):
-        return "Feature_Extractor"
+class FeatureExtractor(AbsFeatureExtractor):
+    def __init__(self, accessmethod, intermediate_function, list_of_featurefunctions):
+        self.intermediate = intermediate_function
+        self.features = list_of_featurefunctions
+        self.c = accessmethod
+    def get_next(self):
+        if not self.have_next():
+            return None    
+        input = ray.get(self.c.get_next.remote())    
+        return self.extract(input)
+    def have_next(self):
+        return ray.get(self.c.have_next.remote())
+    def extract(self, input):
+        intermediate = self.intermediate(input)
+        features_task = []
+        # apply each feature function
+        for featurefunction in self.features:
+                features_task.append(ray.remote(featurefunction).remote(intermediate,input))
+        features = []
+        for i in range(len(features_task)):
+                features.append(ray.get(features_task[i]))
+        return features
 
     
-# input is a list of records, feature function takes one record, return a list of features
-class Batch_Feature_Extractor(Feature_Extractor):
-    def extract(self,input):
-        feature_list = []
-        for i in range(len(input)):
-            feature_list.append(self.feature(input[i]))
-        return feature_list
-    def get_class(self):
-        return "Batch_Feature_Extractor"
+class OneTimeFeatureExtractor(FeatureExtractor):
+    def __init__(self, accessmethod, featurefunction):
+        # pass identity function for one time feature extractor
+        super(self, accessmethod, featurefunction, [lambda a : a])
+        
+class FeatureFactoryExtractor(FeatureExtractor):
+    # featurefactory receives the intermediate data, record and features name, outputs corresponding feature
+    def __init__(self, accessmethod, intermediatefunction, featurefactory, names):
+        # here we use partial function trick https://www.geeksforgeeks.org/partial-functions-python/
+        super(self, accessmethod, intermediatefunction,[featurefactory(intermediate,record,name) for name in names])
     
-class CachedFeatureExtractor(Feature_Extractor):
-    # a set of feature functions that use intermediate data
-    def __init__(self,features,intermediate = None,name ="", size = 30):
-        self.intermediate = intermediate
-        self.features = features
-        self.intermediate = intermediate
-        self.name = name 
-        self.cache = tool.LRUCache(size)
-    
-    def setup(self, input):
-        if self.intermediate is not None:
-            value = self.intermediate(input)
-            self.cache.set(input,value)
-    
-    # input data and which feature function to use
-    def extract(self,input,featureidx):
-        if self.intermediate is not None:
-            inter = self.cache.get(input)
-            # cached
-            if inter is not None:
-                return self.features[featureidx](inter, input)
-            # not cached, recompute the intermediate data
-            else:
-                value = self.intermediate(input)
-                self.cache.set(input,value)
-                return self.features[featureidx](value, input)
-        else:
-            return self.features[featureidx](input)
-    
-    def get_class(self):
-        return "Cached_Feature_Extractor"
-    
-# feature function takes batch of records
-# class Batch_Feature_Extractor_2():
-#     def __init__(self,feature):
-#         self.feature = feature
-#     def extract(self,input,unit):
-#         pass
-#     def get_class(self):
-#         return "Feature_Extractor"
+#dynamicaaly build physical activation extractor based on logical activation extractor
+def build_physical_feature_ext(LogicalFeatureExt):
+    @ray.remote
+    class PhysicalFeatureExt(LogicalFeatureExt):
+        def get_next(self):
+            if not self.have_next():
+                return None
+            input_table = ray.get(self.c.get_next.remote())
+            f_table = dni.tool.FeatureTable()
+            # read the whole batch of inputs
+            for num, input in input_table.itr():
+                f_table.add_table(self.extract(input))    
+            return f_table
+        def have_next(self):
+            return super().have_next()
+    return PhysicalFeatureExt
+        

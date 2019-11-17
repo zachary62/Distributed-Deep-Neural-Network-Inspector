@@ -39,3 +39,13 @@ git commit -m "First commit"
 git remote add origin https://github.com/zachary62/privatedni.git
 git push -u origin master
 ray start --head --redis-port=6379
+jupyter notebook --ip=0.0.0.0 --port=5000 --no-browser &
+git add .
+git commit -m "First commit"
+git push -u origin master
+ray start --head --redis-port=6379
+jupyter notebook --ip=0.0.0.0 --port=5000 --no-browser &
+ray start --head --redis-port=6379
+jupyter notebook --ip=0.0.0.0 --port=5000 --no-browser &
+ray start --head --redis-port=6379
+jupyter notebook --ip=0.0.0.0 --port=5000 --no-browser &

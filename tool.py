@@ -157,3 +157,75 @@ class OneDimEncoders:
 
         out = bin_tensors + (char2int,)
         return out
+    
+
+class InputTable():
+    def __init__(self, table):
+        # assume that table has the same format as the output from keras model prediction
+        self.table = table
+        self.input_num = len(self.table)
+    # return an iterator of all the features of an input
+    def itr(self):
+        for i in range(self.input_num):
+             yield i, self.table[i]
+    def get_stat(self):
+        return {"input_num":self.input_num}
+    def add_table(self, table2):
+        self.table = self.table + table2
+        self.input_num = len(self.table)
+        
+class ActivationTable():
+    def __init__(self, table=None):
+        self.table = table
+        # assume that table has the same format as the output from keras model prediction
+        if table is not None:         
+            self.layer_num = len(self.table)
+            self.unit_num = self.table[0].shape[-1]
+            self.input_num = self.table[0].shape[0]
+            self.activation_shape = self.table[0][0,...,0].shape
+    # return an iterator of all the features of an input
+    def itr(self,input_num):
+        for i in range(self.layer_num):
+            for j in range(self.unit_num):
+                yield i, j, self.table[i][input_num,...,j]
+    def get_stat(self):
+        if self.table is None:
+            return "not initialized"
+        return {"layer_num":self.layer_num,"unit_num":self.unit_num, "input_num":self.input_num, "activation_shape": self.activation_shape}
+    def add_table(self,table2):
+        table1 = self.table
+        if table1 is None:
+            new_table = table2
+        else:
+            new_table = []
+            for i in range(self.layer_num):
+                activation_per_layer = []
+                for j in range(self.unit_num):
+                    activation_per_layer.append(np.concatenate((table1[i][...,j], table2[i][...,j])))
+                new_table.append(np.transpose(np.array(activation_per_layer), (1, 2, 0))) 
+        self.__init__(new_table)
+    
+class FeatureTable():
+    def __init__(self, table = None):
+        self.table =  table
+        if self.table is not None:
+            self.feature_num = len(self.table)
+            self.input_num = len(self.table[0])
+            self.feature_shape = self.table[0][0].shape
+    # return an iterator of all the features of an input
+    def itr(self,input_num):
+        for i in range(self.feature_num):
+            yield i, self.table[i][input_num]
+    def get_stat(self):
+        if self.table is None:
+            return "not initialized"
+        return {"feature_num":self.feature_num, "input_num":self.input_num, "feature_shape": self.feature_shape}
+    def add_table(self,new_table):
+        if self.table is None:
+            self.__init__(new_table)
+        else:
+            for i in range(self.feature_num):
+                self.table[i] = np.concatenate((self.table[i], new_table[i]))
+            self.feature_num = len(self.table)
+            self.input_num = len(self.table[0])
+            self.feature_shape = self.table[0][0].shape
