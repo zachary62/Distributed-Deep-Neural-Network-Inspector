@@ -3,13 +3,11 @@ import importlib
 importlib.reload(dni)
 import ray
 
-class AccessMethod():
-    def __init__(self):
-        pass
+class AccessMethod(dni.baseops.UnaryOp):
     def get_next(self):
-        pass
-    def have_next(self):
-        pass
+        raise Exception("Not implemented")
+    def has_next(self):
+        raise Exception("Not implemented")
 
 class LocalScanner(AccessMethod):
     def __init__(self, filename):
@@ -17,12 +15,12 @@ class LocalScanner(AccessMethod):
         self.f.seek(0)
         self.nextline = self.f.readline()
     def get_next(self):
-        if not self.have_next():
+        if not self.has_next():
             return None
         currentline = self.nextline
         self.nextline = self.f.readline()
         return self.post_process(currentline)
-    def have_next(self):
+    def has_next(self):
         if self.nextline:
             return True
         else:
@@ -39,9 +37,9 @@ def build_physical_scanner(LogicalScanner):
             self.batch = batch  
         def get_next(self):
             batch_inputs = []
-            while self.have_next() and len(batch_inputs)<self.batch:
+            while self.has_next() and len(batch_inputs)<self.batch:
                 batch_inputs.append(super().get_next())
             return dni.tool.InputTable(batch_inputs) 
-        def have_next(self):
-            return super().have_next()
+        def has_next(self):
+            return super().has_next()
     return PhysicalScanner

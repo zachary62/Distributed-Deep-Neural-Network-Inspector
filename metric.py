@@ -128,7 +128,7 @@ class IncrementalCorrelation():
         self.model_child = model_ext
         self.feature_child = feature_ext
     def open_itr(self):
-        while ray.get(self.model_child.have_next.remote()) is True and ray.get(self.feature_child.have_next.remote()) is True:
+        while ray.get(self.model_child.has_next.remote()) is True and ray.get(self.feature_child.has_next.remote()) is True:
             feature_table = ray.get(self.feature_child.get_next.remote())
             feature_stat = feature_table.get_stat()
             activation_table = ray.get(self.model_child.get_next.remote())
@@ -137,9 +137,9 @@ class IncrementalCorrelation():
                 print(feature_stat["input_num"], activation_stat["input_num"])
             assert(feature_stat["input_num"] == activation_stat["input_num"])
             for i in range(feature_stat["input_num"]):
-                for feature_num, feature in feature_table.itr(i):
-                    for layer_num, unit_num, activation in activation_table.itr(i):
-                        self.increment(feature,activation,0,layer_num,unit_num,feature_num)      
+                for index1, feature in feature_table.itr(i):
+                    for index2, activation in activation_table.itr(i):
+                        self.increment(feature,activation,0,index2[2],index2[3],index1[4])      
     # input should from one layer one unit
     def increment(self,input1,input2,model, layer, unit, feature):
         import numpy as np

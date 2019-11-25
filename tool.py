@@ -157,7 +157,18 @@ class OneDimEncoders:
 
         out = bin_tensors + (char2int,)
         return out
-    
+
+def features_list_to_array(features):
+    feature_array = []
+    for feature in np.transpose(np.array(features), (1, 0, 2)):
+        feature_array.append([[[feature]]])
+    return feature_array
+
+def activations_list_to_array(activations):
+    activation_array = []
+    for activation in np.transpose(np.array(activations), (1, 0, 3, 2))[..., np.newaxis,:]:
+        activation_array.append([activation])
+    return activation_array
 
 class InputTable():
     def __init__(self, table):
@@ -229,3 +240,41 @@ class FeatureTable():
             self.feature_num = len(self.table)
             self.input_num = len(self.table[0])
             self.feature_shape = self.table[0][0].shape
+            
+class HighDimensionPartitionableTable():
+    def __init__(self, table=None, padding = 0):
+        # table is a an nparray
+        # 1. input_id 2. model_id 3. layer_id 4. unit_id 5. feature_id 6. feature/activation
+        self.table = table
+        # after partition, all the index are zero-based
+        # use padding to track the real input_id
+        self.padding = padding
+    # iterate through specified number of dimensions
+    # for now only support 5 dimensions
+    def itr(self, input_id, dimension = 5):
+        i = input_id
+        for j in range(len(self.table[i])):
+            for k in range(len(self.table[i][j])):
+                for l in range(len(self.table[i][j][k])):
+                    for m in range(len(self.table[i][j][k][l])):
+                        yield [i + self.padding,j,k,l,m], self.table[i][j][k][l][m]
+    # partition HighDimensionPartitionableTable
+    # and returns two HighDimensionPartitionableTables
+    def partition(self, partition_num):
+        total_num = len(self.table)
+        step = total_num//partition_num
+        Tables = []
+        for i in range(partition_num - 1):
+            Tables.append(HighDimensionPartitionableTable(self.table[i*step:(i+1)*step],i*step))
+        Tables.append(HighDimensionPartitionableTable(self.table[(partition_num - 1)*step:],(partition_num - 1)*step))
+        return Tables
+    def get_stat(self):
+        if self.table is None:
+            return "not initialized"
+        return {"feature_num":len(self.table[0][0][0][0]), "input_num":len(self.table), "shape": self.table[0][0][0][0][0].shape, "model_num":len(self.table[0]),"unit_num":len(self.table[0][0][0]), "layer_num":len(self.table[0][0])}
+    def merge(self, table):
+        if self.table is None:
+            self.table = table
+        else:
+            self.table = self.table + table
+    

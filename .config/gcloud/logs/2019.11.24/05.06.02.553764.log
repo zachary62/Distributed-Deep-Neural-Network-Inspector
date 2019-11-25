@@ -1,0 +1,7 @@
+2019-11-24 05:06:02,554 DEBUG    root            Loaded Command Group: [u'gcloud', u'auth']
+2019-11-24 05:06:02,557 DEBUG    root            Loaded Command Group: [u'gcloud', u'auth', u'configure_docker']
+2019-11-24 05:06:02,561 DEBUG    root            Running [gcloud.auth.configure-docker] with arguments: [--quiet: "True"]
+2019-11-24 05:06:02,639 INFO     ___FILE_ONLY___ gcloud credential helpers already registered correctly.
+
+2019-11-24 05:06:02,641 INFO     root            Display format: "default"
+2019-11-24 05:06:02,645 DEBUG    root            SDK update checks are disabled.

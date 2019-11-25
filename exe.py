@@ -11,7 +11,16 @@ def execute(clusterid ,
             MetricExtractor, MetricName):
     ray.shutdown()
     ray.init(address=clusterid)
-
+    registry = dni.udf.UDFRegistry.registry()
+    for index1, elem1 in enumerate(FeaturesFunctions):
+        for index2, elem2 in enumerate(elem1):
+            if isinstance(elem2, list):
+                for index3, elem3 in enumerate(elem2):
+                    if type(elem3) is str:
+                        FeaturesFunctions[index1][index2][index3] = registry[elem3]
+            else:
+                if type(elem2) is str:
+                    FeaturesFunctions[index1][index2] = registry[elem2]
     nummodel = len(Models)
     layers = []
     units = []
