@@ -2,7 +2,7 @@ import dni
 import importlib
 importlib.reload(dni)
 import ray
-
+import numpy as np
 class AbsActivationExtractor(dni.baseops.UnaryOp):
     def get_next(self):
         raise Exception("Not implemented")
@@ -48,11 +48,16 @@ def build_physical_activation_ext(LogicalActivationExt):
             if not self.has_next():
                 return None
             input_table = ray.get(self.c.get_next.remote())
-            table = dni.tool.HighDimensionPartitionableTable()
             # read the whole batch of inputs
+            data = None
             for num, input in input_table.itr():
-                table.merge(dni.tool.activations_list_to_array(self.predict(input)))   
-            return table
+                new_data = dni.tool.activations_list_to_array(self.predict(input))
+                if data is None:
+                    data = new_data
+                else: 
+                    data = np.vstack((data,new_data))
+            df = dni.tool.DniDataFrame(data)
+            return df
         def has_next(self):
             return super().has_next()
     return PhysicalActivationExt

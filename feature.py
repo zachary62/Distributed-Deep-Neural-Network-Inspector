@@ -2,6 +2,7 @@ import dni
 import importlib
 importlib.reload(dni)
 import ray
+import numpy as np
 # register functions instead of passing a subclass
 class AbsFeatureExtractor(dni.baseops.UnaryOp):
     def get_next(self):
@@ -56,11 +57,16 @@ def build_physical_feature_ext(LogicalFeatureExt):
             if not self.has_next():
                 return None
             input_table = ray.get(self.c.get_next.remote())
-            table = dni.tool.HighDimensionPartitionableTable()
-            # read the whole batch of inputs
+            #  read the whole batch of inputs
+            data = None
             for num, input in input_table.itr():
-                table.merge(dni.tool.features_list_to_array(self.extract(input)))    
-            return table
+                new_data = dni.tool.features_list_to_array(self.extract(input))
+                if data is None: 
+                    data = new_data
+                else: 
+                    data = np.vstack((data,new_data))
+            df = dni.tool.DniDataFrame(data)
+            return df
         def has_next(self):
             return super().has_next()
     return PhysicalFeatureExt

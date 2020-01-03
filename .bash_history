@@ -55,3 +55,10 @@ git push -u origin master
 jupyter notebook --ip=0.0.0.0 --port=5000 --no-browser &
 ray start --head --redis-port=6379
 jupyter notebook --ip=0.0.0.0 --port=5000 --no-browser &
+git add.
+git add .
+git commit -m "partition"
+git push -u origin master
+ls
+python
+jupyter notebook --ip=0.0.0.0 --port=5000 --no-browser &
